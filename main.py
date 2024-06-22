@@ -60,7 +60,7 @@ class NetflixLocationUpdate:
         options = Options()
         if os.getenv("HEADLESS", "True").lower() in ["1", "t", "true"]:
             options.add_argument("-headless")
-        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
+        driver = webdriver.Firefox(options=options)
         return driver
 
     @staticmethod
