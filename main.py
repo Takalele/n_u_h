@@ -7,6 +7,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 from chromedriver_py import binary_path
 from dotenv import load_dotenv
 import os
@@ -57,7 +58,10 @@ class NetflixLocationUpdate:
 
     @staticmethod
     def __init_webdriver() -> webdriver.Firefox:
-        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()))
+        options = Options()
+        if os.getenv("HEADLESS", "True").lower() in ["1", "t", "true"]:
+            options.add_argument("-headless")
+        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
         return driver
 
     @staticmethod
