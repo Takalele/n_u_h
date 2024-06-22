@@ -8,7 +8,6 @@ from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from chromedriver_py import binary_path
 from dotenv import load_dotenv
 import os
 
