@@ -207,5 +207,5 @@ class NetflixScheduler:
 
 if __name__ == '__main__':
     netflix_updater = NetflixLocationUpdate()
-    scheduler = NetflixScheduler(polling_time=os.getenv("MAILBOX_POLLING_SECONDS"), location_update=netflix_updater)
+    scheduler = NetflixScheduler(polling_time=int(os.getenv("MAILBOX_POLLING_SECONDS")), location_update=netflix_updater)
     scheduler.run()
