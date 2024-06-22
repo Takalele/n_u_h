@@ -66,6 +66,7 @@ class NetflixLocationUpdate:
     @staticmethod
     def __init_mails(imap_server: str, imap_port: int, username: str, password: str) -> imaplib.IMAP4_SSL:
         # Connect to the IMAP server
+        print("login", username, "to", imap_server, ":", imap_port)
         mail = imaplib.IMAP4_SSL(imap_server, imap_port)
         mail.login(username, password)
         return mail
