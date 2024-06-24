@@ -53,7 +53,7 @@ class NetflixLocationUpdate:
     def __del__(self):
         self.close()
 
-    def init_webdriver() -> webdriver.Firefox:
+    def init_webdriver(self) -> webdriver.Firefox:
         options = Options()
         if os.getenv("HEADLESS", "True").lower() in ["1", "t", "true"]:
             options.add_argument("-headless")
@@ -89,7 +89,7 @@ class NetflixLocationUpdate:
             logging.error(e)
             return False
 
-    def parse_html_for_button(self, update_link: str):
+    def parse_html_for_button(self, update_link: str) -> bool:
         driver = self.init_webdriver()
         try:
             driver.get(update_link)
@@ -175,6 +175,9 @@ class NetflixLocationUpdate:
                     update_link = 'https://' + update_link
                     ret = self.parse_html_for_button(update_link)
                     logging.info(f"Parsed Netflix Email. Successful: {ret}, Link: {update_link}")
+                    if not ret:
+                        AppriseNotifier().send_notification("Netflix", f"Something is wrong with the link try manually {update_link}")
+                        #self._mail.store(email_id, '-FLAGS', r'(\Seen)')
 
             # Move Email into Netflix folder
             if self._move_to_mailbox:
