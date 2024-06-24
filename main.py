@@ -4,10 +4,10 @@ import time
 import logging
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
-#from webdriver_manager.firefox import GeckoDriverManager
 from selenium.webdriver import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
+from apprise_notifier import AppriseNotifier
 from dotenv import load_dotenv
 import os
 
@@ -22,7 +22,6 @@ BUTTON_SEARCH_ATTR_VALUE = 'set-primary-location-action'
 
 
 class NetflixLocationUpdate:
-    _driver: webdriver.Firefox
     _mail: imaplib.IMAP4_SSL
     _mailbox_name: str              # Mailbox name for incoming Emails (normally INBOX)
     _move_to_mailbox: str           # If true, Netflix Emails will be moved into another mailbox
@@ -45,7 +44,6 @@ class NetflixLocationUpdate:
                             datefmt='%Y-%m-%d %H:%M:%S')
         logging.info('---------------- Script started ----------------\n')
 
-        self._driver = self.__init_webdriver()
         self._mail = self.__init_mails(imap_server, imap_port, imap_username, imap_password)
 
         # Create the Netflix folder in the mail account
@@ -55,8 +53,7 @@ class NetflixLocationUpdate:
     def __del__(self):
         self.close()
 
-    @staticmethod
-    def __init_webdriver() -> webdriver.Firefox:
+    def init_webdriver() -> webdriver.Firefox:
         options = Options()
         if os.getenv("HEADLESS", "True").lower() in ["1", "t", "true"]:
             options.add_argument("-headless")
@@ -72,22 +69,19 @@ class NetflixLocationUpdate:
         return mail
 
     def close(self):
-        # Shutdown webdriver
-        if self._driver is not None:
-            self._driver.quit()
         # Close the mail connection
         if self._mail is not None:
             self._mail.close()
             self._mail.logout()
         logging.info('---------------- Script shutdown ----------------\n')
 
-    def __netflix_login(self):
+    def netflix_login(self, driver: webdriver.Firefox):
         try:
-            email_field = self._driver.find_element(By.CSS_SELECTOR, 'input[name="userLoginId"]')
-            password_field = self._driver.find_element(By.CSS_SELECTOR, 'input[name="password"]')
+            email_field = driver.find_element(By.CSS_SELECTOR, 'input[name="userLoginId"]')
+            password_field = driver.find_element(By.CSS_SELECTOR, 'input[name="password"]')
             email_field.send_keys(os.getenv('NETFLIX_USERNAME'))
             password_field.send_keys(os.getenv('NETFLIX_PASSWORD'))
-            login_button = self._driver.find_element(By.CSS_SELECTOR, 'button[data-uia=login-submit-button]')
+            login_button = driver.find_element(By.CSS_SELECTOR, 'button[data-uia=login-submit-button]')
             login_button.send_keys(Keys.RETURN)
             time.sleep(1)
             return True
@@ -95,28 +89,32 @@ class NetflixLocationUpdate:
             logging.error(e)
             return False
 
-    def __parse_html_for_button(self, update_link):
-        self._driver.get(update_link)
-        time.sleep(1)
+    def parse_html_for_button(self, update_link: str):
+        driver = self.init_webdriver()
         try:
-            email_field = self._driver.find_element(By.CSS_SELECTOR, 'input[name="userLoginId"]')
-            logging.info('Currently not logged in. Try to login to Netflix account')
-            self.__netflix_login()
-        except Exception as e:
-            logging.info('Already logged in.')
-            pass
+            driver.get(update_link)
+            time.sleep(1)
+            try:
+                email_field = driver.find_element(By.CSS_SELECTOR, 'input[name="userLoginId"]')
+                logging.info('Currently not logged in. Try to login to Netflix account')
+                self.netflix_login(driver)
+            except Exception as e:
+                logging.info('Already logged in.')
+                pass
 
-        try:
-            # Find the confirmation button after login
-            button = self._driver.find_element(By.CSS_SELECTOR, f'button[{BUTTON_SEARCH_ATTR_NAME}={BUTTON_SEARCH_ATTR_VALUE}]')
-            # Just press all buttons, found in the HTML page. This is done to ensure, that the correct button got pressed
-            if button is not None:
-                button.click()
-                return True
-        except Exception as e:
-            logging.error(e)
-            pass
-
+            try:
+                # Find the confirmation button after login
+                button = driver.find_element(By.CSS_SELECTOR, f'button[{BUTTON_SEARCH_ATTR_NAME}={BUTTON_SEARCH_ATTR_VALUE}]')
+                # Just press all buttons, found in the HTML page. This is done to ensure, that the correct button got pressed
+                if button is not None:
+                    button.click()
+                    AppriseNotifier().send_notification("Netflix", "Household got updated!")
+                    return True
+            except Exception as e:
+                logging.error(e)
+                pass
+        finally:
+            driver.quit()
         return False
 
     def fetch_mails(self):
@@ -175,7 +173,7 @@ class NetflixLocationUpdate:
                 update_link = update_link.replace('=3D', '=').replace('&amp;', '&').replace('=\n', '')
                 if update_link != '':
                     update_link = 'https://' + update_link
-                    ret = self.__parse_html_for_button(update_link)
+                    ret = self.parse_html_for_button(update_link)
                     logging.info(f"Parsed Netflix Email. Successful: {ret}, Link: {update_link}")
 
             # Move Email into Netflix folder
