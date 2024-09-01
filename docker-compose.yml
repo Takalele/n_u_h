@@ -1,0 +1,19 @@
+services: 
+    netflix_update_household:
+      container_name: netflix_update_household
+      image: ghcr.io/4n4n4s/netflix-update-household:main
+      restart: unless-stopped
+      environment:
+        - 'NETFLIX_USERNAME=XXXXXX'
+        - 'NETFLIX_PASSWORD=XXXXXX'
+        - 'IMAP_USERNAME=XXXXXX'
+        - 'IMAP_PASSWORD=XXXXXX'
+        - 'IMAP_SERVER=imap.gmail.com'
+        - 'IMAP_PORT=993'
+        - 'MAILBOX=INBOX'
+        - 'MAILBOX_TO=Netflix'
+        - 'MOVE_TO_MAILBOX_TO=True'
+        - 'MAILBOX_POLLING_SECONDS=10'
+        - 'HEADLESS=True'
+        - 'APPRISE_SERVICE_URL=tgram://XXXXXX:XXXXXX-XXXXXX/XXXXXX'
+        - 'TZ=Europe/Berlin'
