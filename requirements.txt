@@ -1,4 +1,4 @@
 selenium==4.27.1
 python-dotenv==1.0.1
 #notifications
-apprise==1.9.0
+apprise==1.9.1
