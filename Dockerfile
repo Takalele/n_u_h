@@ -12,7 +12,7 @@ RUN install -d -m 0755 /etc/apt/keyrings && \
     echo "Package: *\nPin: origin packages.mozilla.org\nPin-Priority: 1000" | tee /etc/apt/preferences.d/mozilla 
 
 RUN apt update && \
-    apt install -y firefox --no-install-recommends && \
+    apt install -y firefox procps --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

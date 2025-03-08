@@ -1,8 +1,16 @@
 services: 
     netflix_update_household:
+      logging:
+        driver: "json-file"
+        options:
+          max-size: "200k"
+          max-file: "10"
       container_name: netflix_update_household
-      image: ghcr.io/4n4n4s/netflix-update-household:main
+      image: takalele/n_u_h:latest
       restart: unless-stopped
+      mem_limit: 2048mb
+      cpu_period: 100000
+      cpu_quota: 25000
       environment:
         - 'NETFLIX_USERNAME=XXXXXX'
         - 'NETFLIX_PASSWORD=XXXXXX'
@@ -13,7 +21,7 @@ services:
         - 'MAILBOX=INBOX'
         - 'MAILBOX_TO=Netflix'
         - 'MOVE_TO_MAILBOX_TO=True'
-        - 'MAILBOX_POLLING_SECONDS=10'
+        - 'MAILBOX_POLLING_SECONDS=3'
         - 'HEADLESS=True'
         - 'APPRISE_SERVICE_URL=tgram://XXXXXX:XXXXXX-XXXXXX/XXXXXX'
-        - 'TZ=Europe/Berlin'
+        - 'TZ=Europe/Vienna'

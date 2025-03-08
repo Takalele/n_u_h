@@ -1,6 +1,7 @@
 import imaplib
 import email
 import time
+import sys
 import logging
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -39,9 +40,16 @@ class NetflixLocationUpdate:
         imap_password = os.getenv('IMAP_PASSWORD')
 
         # Logging config
-        logging.basicConfig(filename='status.log', encoding='utf8', level=logging.INFO,
-                            format='%(asctime)s %(levelname)-8s %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
+        sys.stdout.reconfigure(line_buffering=True)
+        sys.stderr.reconfigure(line_buffering=True)
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)-8s %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            handlers=[
+                logging.StreamHandler(sys.stdout)
+            ]
+        )
         logging.info('---------------- Script started ----------------\n')
 
         self._mail = self.__init_mails(imap_server, imap_port, imap_username, imap_password)
@@ -63,7 +71,7 @@ class NetflixLocationUpdate:
     @staticmethod
     def __init_mails(imap_server: str, imap_port: int, username: str, password: str) -> imaplib.IMAP4_SSL:
         # Connect to the IMAP server
-        print("login", username, "to", imap_server, ":", imap_port)
+        logging.info(f"Login {username} to {imap_server}:{imap_port}\n")
         mail = imaplib.IMAP4_SSL(imap_server, imap_port)
         mail.login(username, password)
         return mail
@@ -120,6 +128,8 @@ class NetflixLocationUpdate:
     def fetch_mails(self):
         # Select the mailbox you want to fetch emails from
         self._mail.select(self._mailbox_name)
+
+        logging.info(f"Fetching Mails")
 
         # Search for unread emails from the specified sender
         search_criteria = f'(UNSEEN FROM "Netflix")'
